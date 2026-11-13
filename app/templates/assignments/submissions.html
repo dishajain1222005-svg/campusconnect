@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Submissions – {{ assignment.title }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('assignments.index') }}">Assignments</a></li>
+      <li class="breadcrumb-item active">Submissions</li>
+    </ol>
+  </nav>
+  <h1 class="page-title">{{ assignment.title }}</h1>
+  <p class="page-subtitle">{{ subs|length }} submission{{ 's' if subs|length != 1 else '' }}</p>
+</div>
+
+{% if subs %}
+<div class="page-card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead style="background:#FAFAFA;">
+        <tr>
+          <th style="padding:12px 20px;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:#9CA3AF;font-weight:700;border-bottom:1px solid #F3F4F6;">Student</th>
+          <th class="d-none d-md-table-cell" style="padding:12px 14px;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:#9CA3AF;font-weight:700;border-bottom:1px solid #F3F4F6;">Roll No.</th>
+          <th style="padding:12px 14px;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:#9CA3AF;font-weight:700;border-bottom:1px solid #F3F4F6;">Submitted At</th>
+          <th style="padding:12px 14px;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:#9CA3AF;font-weight:700;border-bottom:1px solid #F3F4F6;">Status</th>
+          <th class="d-none d-md-table-cell" style="padding:12px 14px;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:#9CA3AF;font-weight:700;border-bottom:1px solid #F3F4F6;">File</th>
+          <th style="padding:12px 14px;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:#9CA3AF;font-weight:700;border-bottom:1px solid #F3F4F6;">Download</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sub in subs %}
+        <tr>
+          <td style="padding:12px 20px;"><strong style="color:#1E1B4B;">{{ sub.student.full_name }}</strong></td>
+          <td class="d-none d-md-table-cell" style="padding:12px 14px;color:#6B7280;">{{ sub.student.roll_no or '—' }}</td>
+          <td style="padding:12px 14px;"><small style="color:#9CA3AF;">{{ sub.submitted_at.strftime('%d %b %Y, %H:%M') }}</small></td>
+          <td style="padding:12px 14px;">
+            {% if sub.is_late %}
+              <span class="item-badge item-badge-red">Late</span>
+            {% else %}
+              <span class="item-badge item-badge-green">On Time</span>
+            {% endif %}
+          </td>
+          <td class="d-none d-md-table-cell" style="padding:12px 14px;"><small style="color:#9CA3AF;">{{ sub.original_filename }}</small></td>
+          <td style="padding:12px 14px;">
+            <a href="{{ url_for('assignments.download_submission', submission_id=sub.id) }}"
+               class="btn-soft-purple btn btn-sm" style="border-radius:8px;">
+              <i class="bi bi-download"></i>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="empty-state page-card">
+  <i class="bi bi-inbox" style="font-size:3rem;"></i>
+  <div class="empty-title">No submissions yet</div>
+  <div class="empty-desc">Student submissions will appear here.</div>
+</div>
+{% endif %}
+{% endblock %}

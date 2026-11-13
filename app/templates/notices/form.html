@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('notices.index') }}">Notice Board</a></li>
+      <li class="breadcrumb-item active">{{ title }}</li>
+    </ol>
+  </nav>
+  <h1 class="page-title">{{ title }}</h1>
+</div>
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="form-card">
+      <form method="POST" novalidate>
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+          <label class="form-label">{{ form.title.label.text }}</label>
+          {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else ""), placeholder="Notice title") }}
+          {% for e in form.title.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">{{ form.body.label.text }}</label>
+          {{ form.body(class="form-control" + (" is-invalid" if form.body.errors else ""), rows=6, placeholder="Write the notice content here…") }}
+          {% for e in form.body.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">{{ form.publish_date.label.text }} <span style="color:#9CA3AF;font-weight:400;">(leave blank for now)</span></label>
+          {{ form.publish_date(class="form-control") }}
+        </div>
+        <div class="mb-4 d-flex align-items-center gap-3 p-3 rounded" style="background:#FFF1F2;border:1px solid #FECACA;">
+          {{ form.is_important(class="form-check-input", role="switch", style="width:40px;height:22px;") }}
+          <label class="form-check-label fw-semibold" style="color:#DC2626;">{{ form.is_important.label.text }}</label>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary btn-submit">
+            <span class="btn-text"><i class="bi bi-megaphone me-2"></i>{{ form.submit.label.text }}</span>
+            <span class="btn-spinner d-none"><span class="spinner-border spinner-border-sm me-2"></span>Publishing…</span>
+          </button>
+          <a href="{{ url_for('notices.index') }}" class="btn" style="background:#F3F4F6;color:#374151;">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

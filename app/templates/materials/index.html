@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% block title %}Study Materials{% endblock %}
+{% block content %}
+
+<!-- Page header -->
+<div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-2">
+  <div>
+    <h1 class="page-title">Study Materials</h1>
+    <p class="page-subtitle mb-0">Share and manage learning resources for your students.</p>
+  </div>
+  {% if current_user.is_teacher %}
+  <a href="{{ url_for('materials.upload') }}" class="btn btn-primary">
+    <i class="bi bi-upload me-2"></i>Upload Material
+  </a>
+  {% endif %}
+</div>
+
+<!-- Stats bar (real data) -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-4">
+    <div class="materials-stat">
+      <div class="materials-stat-icon" style="background:rgba(99,102,241,.1);color:#6366F1;">
+        <i class="bi bi-file-earmark-fill"></i>
+      </div>
+      <div>
+        <div class="materials-stat-value">{{ materials.total }}</div>
+        <div class="materials-stat-label">Total Materials</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="materials-stat">
+      <div class="materials-stat-icon" style="background:rgba(234,179,8,.1);color:#CA8A04;">
+        <i class="bi bi-folder-fill"></i>
+      </div>
+      <div>
+        <div class="materials-stat-value">{{ subjects|length }}</div>
+        <div class="materials-stat-label">Subjects</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="materials-stat">
+      <div class="materials-stat-icon" style="background:rgba(16,185,129,.1);color:#059669;">
+        <i class="bi bi-people-fill"></i>
+      </div>
+      <div>
+        <div class="materials-stat-value">All Subjects</div>
+        <div class="materials-stat-label">Resources</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Search & filter -->
+<div class="card cc-card mb-4">
+  <div class="card-body">
+    <form method="GET" class="row g-2 align-items-center">
+      <div class="col-md-6">
+        <div class="search-bar">
+          <i class="bi bi-search search-icon"></i>
+          <input type="text" name="q" value="{{ q }}" class="form-control"
+                 placeholder="Search by title, keyword or file name…">
+        </div>
+      </div>
+      <div class="col-md-4">
+        <select name="subject" class="form-select">
+          <option value="">All Subjects</option>
+          {% for s in subjects %}
+          <option value="{{ s }}" {% if s == subject %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="bi bi-search me-1"></i>Search
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if materials.items %}
+<div class="card cc-card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Title</th>
+          <th class="d-none d-md-table-cell">Subject</th>
+          <th class="d-none d-sm-table-cell">Uploaded by</th>
+          <th class="d-none d-sm-table-cell">Date</th>
+          <th class="d-none d-md-table-cell">Size</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in materials.items %}
+        {% set ext = m.original_filename.rsplit('.', 1)[-1].lower() %}
+        <tr>
+          <td>
+            <i class="{{ icons.get(ext, 'bi-file-earmark-fill text-secondary') }} me-2 fs-5"></i>
+            <strong>{{ m.title }}</strong>
+            {% if m.description %}
+            <br><small class="text-muted">{{ m.description[:60] }}{% if m.description|length > 60 %}…{% endif %}</small>
+            {% endif %}
+          </td>
+          <td class="d-none d-md-table-cell">
+            <span class="badge" style="background:rgba(124,58,237,.1);color:var(--cc-secondary);">{{ m.subject }}</span>
+          </td>
+          <td class="d-none d-sm-table-cell text-muted">{{ m.uploader.full_name }}</td>
+          <td class="d-none d-sm-table-cell"><small class="text-muted">{{ m.created_at.strftime('%d %b %Y') }}</small></td>
+          <td class="d-none d-md-table-cell"><small class="text-muted">{{ m.size_human() }}</small></td>
+          <td>
+            <a href="{{ url_for('materials.download', material_id=m.id) }}"
+               class="btn btn-sm" style="background:rgba(124,58,237,.1);color:var(--cc-secondary);border:none;" title="Download">
+              <i class="bi bi-download"></i>
+            </a>
+            {% if current_user.is_teacher and m.uploaded_by == current_user.id %}
+            <form action="{{ url_for('materials.delete', material_id=m.id) }}" method="POST"
+                  class="d-inline" onsubmit="return confirm('Delete this material?');">
+              {{ csrf_token_input() }}
+              <button type="submit" class="btn btn-sm"
+                      style="background:rgba(239,68,68,.1);color:#DC2626;border:none;" title="Delete">
+                <i class="bi bi-trash3"></i>
+              </button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Pagination -->
+{% if materials.pages > 1 %}
+<nav class="mt-4">
+  <ul class="pagination justify-content-center">
+    {% if materials.has_prev %}
+    <li class="page-item">
+      <a class="page-link" href="{{ url_for('materials.index', page=materials.prev_num, q=q, subject=subject) }}">Previous</a>
+    </li>
+    {% endif %}
+    {% for p in materials.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+      {% if p %}
+        <li class="page-item {% if p == materials.page %}active{% endif %}">
+          <a class="page-link" href="{{ url_for('materials.index', page=p, q=q, subject=subject) }}">{{ p }}</a>
+        </li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">…</span></li>
+      {% endif %}
+    {% endfor %}
+    {% if materials.has_next %}
+    <li class="page-item">
+      <a class="page-link" href="{{ url_for('materials.index', page=materials.next_num, q=q, subject=subject) }}">Next</a>
+    </li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<!-- Empty state -->
+<div class="card cc-card mb-4">
+  <div class="empty-state py-5">
+    <!-- Inline SVG illustration (decorative) -->
+    <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" class="mb-2">
+      <circle cx="40" cy="40" r="40" fill="#EDE9FE"/>
+      <rect x="22" y="20" width="28" height="36" rx="4" fill="#C4B5FD"/>
+      <rect x="26" y="20" width="28" height="36" rx="4" fill="#A78BFA"/>
+      <rect x="30" y="20" width="28" height="36" rx="4" fill="#7C3AED" fill-opacity=".8"/>
+      <rect x="34" y="30" width="16" height="2" rx="1" fill="white" fill-opacity=".9"/>
+      <rect x="34" y="35" width="12" height="2" rx="1" fill="white" fill-opacity=".7"/>
+      <rect x="34" y="40" width="10" height="2" rx="1" fill="white" fill-opacity=".5"/>
+      <circle cx="54" cy="52" r="12" fill="#6D28D9"/>
+      <path d="M50 52L54 48L58 52" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M54 48V56" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <div class="empty-title">No materials found</div>
+    <div class="empty-desc">
+      {% if q or subject %}
+        No materials match your search. Try a different keyword.
+      {% else %}
+        Upload study materials to share with your students.
+      {% endif %}
+    </div>
+    {% if current_user.is_teacher and not q and not subject %}
+    <a href="{{ url_for('materials.upload') }}" class="btn btn-primary mt-2">
+      <i class="bi bi-upload me-2"></i>Upload the first material
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Feature hints (only shown when truly empty, no fake data) -->
+{% if not q and not subject %}
+<div class="row g-3">
+  <div class="col-md-4">
+    <div class="feature-hint">
+      <div class="feature-hint-icon"><i class="bi bi-cloud-upload-fill"></i></div>
+      <div>
+        <div class="feature-hint-title">Upload Files</div>
+        <p class="feature-hint-desc">Share PDFs, notes, PPTs and more.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="feature-hint">
+      <div class="feature-hint-icon"><i class="bi bi-folder2-open"></i></div>
+      <div>
+        <div class="feature-hint-title">Organize by Subject</div>
+        <p class="feature-hint-desc">Keep materials well-structured.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="feature-hint">
+      <div class="feature-hint-icon"><i class="bi bi-people-fill"></i></div>
+      <div>
+        <div class="feature-hint-title">Accessible Offline</div>
+        <p class="feature-hint-desc">Students can view and download on the campus network.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endif %}
+
+{% endblock %}

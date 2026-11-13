@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Quizzes{% endblock %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+  <div>
+    <h1 class="page-title">My Quizzes</h1>
+    <p class="page-subtitle mb-0">{{ quizzes|length }} quiz{{ 'zes' if quizzes|length != 1 else '' }}</p>
+  </div>
+  <a href="{{ url_for('quizzes.create') }}" class="btn btn-primary">
+    <i class="bi bi-patch-plus me-2"></i>New Quiz
+  </a>
+</div>
+
+{% if quizzes %}
+<div class="row g-3">
+  {% for q in quizzes %}
+  <div class="col-lg-6">
+    <div class="item-card">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <div class="item-card-title">{{ q.title }}</div>
+        {% if q.is_published %}
+          <span class="item-badge item-badge-green ms-2">Published</span>
+        {% else %}
+          <span class="item-badge item-badge-gray ms-2">Draft</span>
+        {% endif %}
+      </div>
+      <span class="item-badge item-badge-purple mb-2 d-inline-block">{{ q.subject }}</span>
+      {% if q.description %}
+        <p style="font-size:.84rem;color:#6B7280;margin-bottom:10px;">{{ q.description[:80] }}{% if q.description|length > 80 %}…{% endif %}</p>
+      {% endif %}
+      <div class="d-flex gap-3 mb-3" style="font-size:.8rem;color:#9CA3AF;">
+        <span><i class="bi bi-clock me-1"></i>{{ q.duration_minutes }} min</span>
+        <span><i class="bi bi-question-circle me-1"></i>{{ q.questions.count() }} questions</span>
+        <span><i class="bi bi-people me-1"></i>{{ q.attempts.filter_by().count() }} attempts</span>
+        {% if q.allow_retake %}<span style="color:#059669;"><i class="bi bi-arrow-repeat me-1"></i>Retake allowed</span>{% endif %}
+      </div>
+      <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('quizzes.manage', quiz_id=q.id) }}" class="btn btn-sm btn-soft-purple">
+          <i class="bi bi-gear me-1"></i>Manage
+        </a>
+        <a href="{{ url_for('quizzes.results', quiz_id=q.id) }}" class="btn btn-sm" style="background:#EFF6FF;color:#2563EB;border:none;">
+          <i class="bi bi-bar-chart me-1"></i>Results
+        </a>
+        <form action="{{ url_for('quizzes.toggle_publish', quiz_id=q.id) }}" method="POST" class="d-inline">
+          {{ csrf_token_input() }}
+          <button type="submit" class="btn btn-sm" style="background:{% if q.is_published %}#FFFBEB;color:#D97706{% else %}#ECFDF5;color:#059669{% endif %};border:none;">
+            <i class="bi bi-{% if q.is_published %}eye-slash{% else %}eye{% endif %} me-1"></i>
+            {{ 'Unpublish' if q.is_published else 'Publish' }}
+          </button>
+        </form>
+        <form action="{{ url_for('quizzes.delete', quiz_id=q.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this quiz?');">
+          {{ csrf_token_input() }}
+          <button type="submit" class="btn btn-sm btn-soft-red"><i class="bi bi-trash3"></i></button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state page-card">
+  <i class="bi bi-patch-question" style="font-size:3rem;"></i>
+  <div class="empty-title">No quizzes yet</div>
+  <div class="empty-desc">Create your first quiz for students.</div>
+  <a href="{{ url_for('quizzes.create') }}" class="btn btn-primary"><i class="bi bi-patch-plus me-2"></i>Create your first quiz</a>
+</div>
+{% endif %}
+{% endblock %}

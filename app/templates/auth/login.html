@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Sign In{% endblock %}
+{% block auth_content %}
+<div class="login-split">
+
+  <!-- ── Left branding panel ─────────────────────────────────────────── -->
+  <div class="login-brand d-none d-md-flex">
+    <div class="login-brand-content">
+      <!-- Logo icon -->
+      <div class="login-brand-logo">
+        <i class="bi bi-mortarboard-fill text-white"></i>
+      </div>
+      <h1>Campus<span>Connect</span></h1>
+      <p class="brand-subtitle">Your offline academic platform</p>
+
+      <!-- Feature list -->
+      <ul class="login-feature-list">
+        <li>
+          <div class="login-feature-icon"><i class="bi bi-journal-bookmark-fill"></i></div>
+          Share Study Materials
+        </li>
+        <li>
+          <div class="login-feature-icon"><i class="bi bi-clipboard2-check-fill"></i></div>
+          Submit Assignments
+        </li>
+        <li>
+          <div class="login-feature-icon"><i class="bi bi-megaphone-fill"></i></div>
+          Stay Updated with Notices
+        </li>
+        <li>
+          <div class="login-feature-icon"><i class="bi bi-patch-question-fill"></i></div>
+          Take Quizzes &amp; Track Results
+        </li>
+        <li>
+          <div class="login-feature-icon"><i class="bi bi-wifi"></i></div>
+          Works 100% Offline on Campus
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── Right form panel ───────────────────────────────────────────── -->
+  <div class="login-form-panel">
+    <div class="login-card">
+
+      <!-- Mobile logo (only shown on small screens) -->
+      <div class="d-md-none text-center mb-4">
+        <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#7C3AED,#4F46E5);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+          <i class="bi bi-mortarboard-fill text-white fs-4"></i>
+        </div>
+        <h2 class="fw-bold" style="color:var(--cc-text);font-size:1.3rem;">CampusConnect</h2>
+      </div>
+
+      <h2 class="login-card-title">Welcome Back</h2>
+      <p class="login-card-subtitle">Sign in to your CampusConnect account</p>
+
+      {% include "partials/flashes.html" %}
+
+      <form method="POST" action="{{ url_for('auth.login') }}" novalidate>
+        {{ form.hidden_tag() }}
+
+        <!-- Username field -->
+        <div class="mb-3">
+          <label for="username" class="form-label">
+            <i class="bi bi-person me-1" style="color:var(--cc-secondary);"></i>Username
+          </label>
+          <div class="input-with-icon">
+            <i class="bi bi-person input-icon"></i>
+            {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else ""),
+                            id="username",
+                            autocomplete="username",
+                            placeholder="Enter your username") }}
+          </div>
+          {% for e in form.username.errors %}
+            <div class="invalid-feedback d-block">{{ e }}</div>
+          {% endfor %}
+        </div>
+
+        <!-- Password field -->
+        <div class="mb-4">
+          <label for="password" class="form-label">
+            <i class="bi bi-lock me-1" style="color:var(--cc-secondary);"></i>Password
+          </label>
+          <div class="input-group">
+            {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""),
+                            id="password",
+                            autocomplete="current-password",
+                            placeholder="Enter your password",
+                            style="padding-left:14px;") }}
+            <button class="btn btn-outline-secondary" type="button" id="togglePwd"
+                    style="border-left:0;border-radius:0 10px 10px 0;">
+              <i class="bi bi-eye" id="eyeIcon"></i>
+            </button>
+          </div>
+          {% for e in form.password.errors %}
+            <div class="text-danger small mt-1">{{ e }}</div>
+          {% endfor %}
+        </div>
+
+        <!-- Remember me -->
+        <div class="mb-4 d-flex align-items-center justify-content-between">
+          <div class="form-check mb-0">
+            {{ form.remember(class="form-check-input") }}
+            <label class="form-check-label" for="remember" style="font-size:.875rem;">Remember me</label>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="btn-signin btn-submit" id="loginBtn">
+          <span class="btn-text">Sign In <i class="bi bi-arrow-right ms-1"></i></span>
+          <span class="btn-spinner d-none">
+            <span class="spinner-border spinner-border-sm me-2"></span>Signing in…
+          </span>
+        </button>
+      </form>
+
+      <p class="text-center mt-4" style="font-size:.875rem; color:var(--cc-muted);">
+        New student? <a href="{{ url_for('auth.register') }}" class="cc-link">Create an account</a>
+      </p>
+      <p class="text-center mt-1" style="font-size:.8rem; color:#9CA3AF;">
+        Teachers: use the <code style="background:#F3F0FF;padding:2px 6px;border-radius:4px;color:var(--cc-secondary);">flask create-teacher</code> CLI command.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+/* Password show/hide toggle — IDs preserved for JS functionality */
+document.getElementById('togglePwd').addEventListener('click', function() {
+  const pwd = document.getElementById('password');
+  const icon = document.getElementById('eyeIcon');
+  if (pwd.type === 'password') {
+    pwd.type = 'text';
+    icon.className = 'bi bi-eye-slash';
+  } else {
+    pwd.type = 'password';
+    icon.className = 'bi bi-eye';
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block title %}{{ quiz.title }} – Attempt{% endblock %}
+
+{% block extra_head %}
+<style>
+/* Quiz attempt page has its own focused layout */
+.quiz-attempt-layout { max-width: 820px; margin: 0 auto; }
+.question-card { display: none; }
+.question-card.active { display: block; }
+.option-label { cursor: pointer; border: 2px solid #e2e8f0; border-radius: 10px;
+  padding: 12px 16px; transition: all .2s; display: block; margin-bottom: 8px; }
+.option-label:hover { border-color: var(--cc-secondary); background: #EFF6FF; }
+input[type=radio]:checked + .option-label { border-color: var(--cc-secondary);
+  background: #DBEAFE; font-weight: 600; }
+.palette-btn { width: 36px; height: 36px; font-size: 13px; padding: 0;
+  border-radius: 50%; border: 2px solid #cbd5e1; }
+.palette-btn.answered { background: var(--cc-secondary); color: white; border-color: var(--cc-secondary); }
+.palette-btn.current { border-color: var(--cc-primary); border-width: 3px; }
+#timer { font-size: 1.4rem; font-weight: 700; }
+#timer.warning { color: #DC2626; animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- SECURITY: The server never sends correct answers to this page.
+     All answers are compared server-side on submission only. -->
+<div class="quiz-attempt-layout">
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div>
+      <h2 class="fw-bold mb-0">{{ quiz.title }}</h2>
+      <small class="text-muted">{{ quiz.subject }} &nbsp;·&nbsp; {{ questions|length }} questions</small>
+    </div>
+    <div class="card px-4 py-2 shadow-sm">
+      <div class="text-muted small text-center">Time Remaining</div>
+      <div id="timer">--:--</div>
+    </div>
+  </div>
+
+  <form method="POST" action="{{ url_for('quizzes.submit_attempt', quiz_id=quiz.id, attempt_id=attempt.id) }}"
+        id="quizForm" novalidate>
+    {{ csrf_token_input() }}
+    <!-- Question palette -->
+    <div class="card cc-card mb-3 p-3">
+      <div class="d-flex flex-wrap gap-2 align-items-center">
+        <span class="text-muted small me-2">Jump to:</span>
+        {% for q in questions %}
+        <button type="button" class="palette-btn" id="pb_{{ loop.index }}"
+                onclick="goTo({{ loop.index - 1 }})">{{ loop.index }}</button>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Questions -->
+    {% for q in questions %}
+    {% set outer_idx = loop.index0 %}
+    <div class="question-card card cc-card mb-3 p-4 {% if loop.first %}active{% endif %}"
+         id="qcard_{{ loop.index0 }}" data-idx="{{ loop.index0 }}">
+      <div class="d-flex justify-content-between mb-3">
+        <span class="fw-semibold text-muted small">Question {{ loop.index }} of {{ questions|length }}</span>
+        <span class="badge bg-info text-dark">{{ q.marks }} mark{{ 's' if q.marks != 1 else '' }}</span>
+      </div>
+      <p class="fs-5 fw-semibold mb-4">{{ q.text }}</p>
+      {% for opt, text in [('A', q.a), ('B', q.b), ('C', q.c), ('D', q.d)] %}
+      <div>
+        <input type="radio" name="q_{{ q.id }}" id="q{{ q.id }}_{{ opt }}"
+               value="{{ opt }}" class="d-none opt-radio" data-qidx="{{ outer_idx }}">
+        <label for="q{{ q.id }}_{{ opt }}" class="option-label">
+          <strong>{{ opt }}.</strong> {{ text }}
+        </label>
+      </div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+
+    <!-- Navigation -->
+    <div class="d-flex justify-content-between align-items-center mt-3">
+      <button type="button" class="btn btn-outline-secondary" id="prevBtn" onclick="navigate(-1)" disabled>
+        <i class="bi bi-arrow-left me-1"></i>Previous
+      </button>
+      <button type="button" class="btn btn-outline-primary" id="nextBtn" onclick="navigate(1)">
+        Next <i class="bi bi-arrow-right ms-1"></i>
+      </button>
+      <button type="submit" class="btn btn-success d-none" id="submitBtn">
+        <i class="bi bi-check-lg me-2"></i>Submit Quiz
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// ── Quiz attempt JavaScript ───────────────────────────────────────────────
+// Security: answers are scored server-side only. No answer keys here.
+
+const TOTAL = {{ questions|length }};
+const REMAINING = {{ remaining_seconds }};
+let current = 0;
+const answered = new Set();
+
+// ── Timer ─────────────────────────────────────────────────────────────────
+let timeLeft = REMAINING;
+const timerEl = document.getElementById('timer');
+
+function formatTime(s) {
+  const m = Math.floor(s / 60), sec = s % 60;
+  return String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+}
+
+function tick() {
+  timerEl.textContent = formatTime(timeLeft);
+  if (timeLeft <= 60) timerEl.classList.add('warning');
+  if (timeLeft <= 0) {
+    timerEl.textContent = '00:00';
+    // Auto-submit when time ends
+    document.getElementById('quizForm').submit();
+    return;
+  }
+  timeLeft--;
+  setTimeout(tick, 1000);
+}
+tick();
+
+// ── Question navigation ───────────────────────────────────────────────────
+function showQuestion(idx) {
+  document.querySelectorAll('.question-card').forEach(c => c.classList.remove('active'));
+  document.getElementById('qcard_' + idx).classList.add('active');
+
+  document.querySelectorAll('.palette-btn').forEach(b => b.classList.remove('current'));
+  document.getElementById('pb_' + (idx + 1)).classList.add('current');
+
+  document.getElementById('prevBtn').disabled = idx === 0;
+  document.getElementById('nextBtn').classList.toggle('d-none', idx === TOTAL - 1);
+  document.getElementById('submitBtn').classList.toggle('d-none', idx !== TOTAL - 1);
+  current = idx;
+}
+
+function navigate(dir) {
+  const next = current + dir;
+  if (next >= 0 && next < TOTAL) showQuestion(next);
+}
+
+function goTo(idx) { showQuestion(idx); }
+
+// ── Track answered questions ──────────────────────────────────────────────
+document.querySelectorAll('.opt-radio').forEach(radio => {
+  radio.addEventListener('change', function() {
+    const idx = parseInt(this.dataset.qidx);
+    answered.add(idx);
+    const btn = document.getElementById('pb_' + (idx + 1));
+    btn.classList.add('answered');
+  });
+});
+
+// ── Confirm before submit ─────────────────────────────────────────────────
+document.getElementById('quizForm').addEventListener('submit', function(e) {
+  if (timeLeft > 0) {
+    const unanswered = TOTAL - answered.size;
+    if (unanswered > 0) {
+      if (!confirm(`You have ${unanswered} unanswered question(s). Submit anyway?`)) {
+        e.preventDefault();
+        return;
+      }
+    }
+  }
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('submitBtn').innerHTML =
+    '<span class="spinner-border spinner-border-sm me-2"></span>Submitting…';
+});
+
+showQuestion(0);
+</script>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Notice Board{% endblock %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+  <div>
+    <h1 class="page-title">Notice Board</h1>
+    <p class="page-subtitle mb-0">{{ notices|length }} notice{{ 's' if notices|length != 1 else '' }}</p>
+  </div>
+  {% if current_user.is_teacher %}
+  <a href="{{ url_for('notices.create') }}" class="btn btn-primary">
+    <i class="bi bi-megaphone me-2"></i>Post Notice
+  </a>
+  {% endif %}
+</div>
+
+<!-- Search -->
+<div class="form-card mb-4">
+  <form method="GET" class="d-flex gap-2">
+    <div style="position:relative;flex:1;">
+      <i class="bi bi-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9CA3AF;pointer-events:none;"></i>
+      <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Search notices…" style="padding-left:36px;">
+    </div>
+    <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i></button>
+    {% if q %}<a href="{{ url_for('notices.index') }}" class="btn" style="background:#F3F4F6;color:#374151;">Clear</a>{% endif %}
+  </form>
+</div>
+
+{% if notices %}
+  {% set important = notices | selectattr('is_important') | list %}
+  {% set regular   = notices | rejectattr('is_important') | list %}
+
+  {% if important %}
+  <div class="mb-3">
+    <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.8px;font-weight:700;color:#DC2626;margin-bottom:10px;">
+      <i class="bi bi-pin-angle-fill me-1"></i>Pinned – Important
+    </div>
+    {% for n in important %}
+    <div class="notice-card important">
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+        <div>
+          <span class="item-badge item-badge-red mb-1 d-inline-block"><i class="bi bi-exclamation-triangle-fill me-1"></i>Important</span>
+          <div class="item-card-title">{{ n.title }}</div>
+          <small style="color:#9CA3AF;">By {{ n.author.full_name }} · {{ n.publish_date.strftime('%d %b %Y, %H:%M') }}</small>
+        </div>
+        {% if current_user.is_teacher and n.author_id == current_user.id %}
+        <div class="d-flex gap-2">
+          <a href="{{ url_for('notices.edit', notice_id=n.id) }}" class="btn btn-sm" style="background:#F3F4F6;color:#374151;border:none;"><i class="bi bi-pencil"></i></a>
+          <form action="{{ url_for('notices.delete', notice_id=n.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this notice?');">
+            {{ csrf_token_input() }}
+            <button type="submit" class="btn btn-sm btn-soft-red"><i class="bi bi-trash3"></i></button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+      <p style="margin:0;white-space:pre-wrap;color:#374151;font-size:.9rem;line-height:1.65;">{{ n.body }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if regular %}
+  <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.8px;font-weight:700;color:#9CA3AF;margin-bottom:10px;">
+    <i class="bi bi-bell me-1"></i>All Notices
+  </div>
+  {% for n in regular %}
+  <div class="notice-card">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+      <div>
+        <div class="item-card-title">{{ n.title }}</div>
+        <small style="color:#9CA3AF;">By {{ n.author.full_name }} · {{ n.publish_date.strftime('%d %b %Y, %H:%M') }}</small>
+      </div>
+      {% if current_user.is_teacher and n.author_id == current_user.id %}
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('notices.edit', notice_id=n.id) }}" class="btn btn-sm" style="background:#F3F4F6;color:#374151;border:none;"><i class="bi bi-pencil"></i></a>
+        <form action="{{ url_for('notices.delete', notice_id=n.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this notice?');">
+          {{ csrf_token_input() }}
+          <button type="submit" class="btn btn-sm btn-soft-red"><i class="bi bi-trash3"></i></button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+    <p style="margin:0;white-space:pre-wrap;color:#374151;font-size:.9rem;line-height:1.65;">{{ n.body }}</p>
+  </div>
+  {% endfor %}
+  {% endif %}
+
+{% else %}
+<div class="empty-state page-card">
+  <i class="bi bi-megaphone" style="font-size:3rem;"></i>
+  <div class="empty-title">{% if q %}No notices match "{{ q }}"{% else %}No notices yet{% endif %}</div>
+  <div class="empty-desc">{% if not q %}Notices posted by teachers will appear here.{% endif %}</div>
+  {% if current_user.is_teacher and not q %}
+  <a href="{{ url_for('notices.create') }}" class="btn btn-primary">Post the first notice</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

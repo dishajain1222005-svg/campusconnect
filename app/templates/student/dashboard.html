@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}Student Dashboard{% endblock %}
+{% block content %}
+
+<!-- Page header -->
+<div class="page-header">
+  <h1 class="page-title">Welcome, {{ current_user.full_name.split()[0] }}!</h1>
+  <p class="page-subtitle mb-0">Here's your academic summary for today.</p>
+</div>
+
+<!-- Hero banner -->
+<div class="dashboard-hero">
+  <h2><span>CampusConnect</span></h2>
+  <p>Your Offline Academic Platform</p>
+</div>
+
+<!-- Stat cards (real data only) -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(99,102,241,.1); color:#6366F1;">
+        <i class="bi bi-journal-bookmark-fill"></i>
+      </div>
+      <div class="stat-value">{{ total_materials }}</div>
+      <div class="stat-label">Study Materials</div>
+      <a href="{{ url_for('materials.index') }}" class="stretched-link"></a>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(234,179,8,.1); color:#CA8A04;">
+        <i class="bi bi-clipboard2-check-fill"></i>
+      </div>
+      <div class="stat-value">{{ pending_count }}</div>
+      <div class="stat-label">Pending Assignments</div>
+      <a href="{{ url_for('assignments.index') }}" class="stretched-link"></a>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(16,185,129,.1); color:#059669;">
+        <i class="bi bi-patch-question-fill"></i>
+      </div>
+      <div class="stat-value">{{ total_quizzes }}</div>
+      <div class="stat-label">Available Quizzes</div>
+      <a href="{{ url_for('quizzes.index') }}" class="stretched-link"></a>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(239,68,68,.1); color:#DC2626;">
+        <i class="bi bi-megaphone-fill"></i>
+      </div>
+      <div class="stat-value">{{ recent_notices|length }}</div>
+      <div class="stat-label">Recent Notices</div>
+      <a href="{{ url_for('notices.index') }}" class="stretched-link"></a>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Upcoming deadlines -->
+  <div class="col-lg-6">
+    <div class="card cc-card h-100">
+      <div class="cc-card-header">
+        <i class="bi bi-calendar-event-fill" style="color:#F59E0B;"></i> Upcoming Deadlines
+      </div>
+      <div class="card-body p-0">
+        {% if upcoming %}
+          <ul class="list-group list-group-flush">
+            {% for a in upcoming %}
+            <li class="list-group-item d-flex justify-content-between align-items-start py-3">
+              <div>
+                <div class="fw-semibold" style="font-size:.9rem;">{{ a.title }}</div>
+                <small class="text-muted">{{ a.subject }}</small>
+              </div>
+              <div class="text-end">
+                <!-- countdown-badge and data-deadline preserved for main.js -->
+                <span class="badge bg-warning text-dark countdown-badge" data-deadline="{{ a.deadline.isoformat() }}">
+                  {{ a.deadline.strftime('%d %b, %H:%M') }}
+                </span>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="empty-state py-4">
+            <i class="bi bi-calendar-check fs-1" style="color:#C4B5FD;font-size:2.5rem!important;opacity:1;"></i>
+            <div class="empty-title mt-2">No upcoming deadlines</div>
+            <div class="empty-desc">You're all caught up! 🎉</div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent announcements -->
+  <div class="col-lg-6">
+    <div class="card cc-card h-100">
+      <div class="cc-card-header">
+        <i class="bi bi-megaphone-fill" style="color:#DC2626;"></i> Recent Announcements
+      </div>
+      <div class="card-body p-0">
+        {% if recent_notices %}
+          <ul class="list-group list-group-flush">
+            {% for n in recent_notices %}
+            <li class="list-group-item py-3 {{ 'list-group-item-warning' if n.is_important else '' }}">
+              <div class="d-flex justify-content-between align-items-start">
+                <span class="fw-semibold" style="font-size:.875rem;">
+                  {% if n.is_important %}
+                    <i class="bi bi-pin-fill me-1" style="color:#DC2626;"></i>
+                  {% endif %}
+                  {{ n.title }}
+                </span>
+                <small class="text-muted ms-2 text-nowrap">{{ n.publish_date.strftime('%d %b') }}</small>
+              </div>
+              <small class="text-muted">{{ n.body[:80] }}{% if n.body|length > 80 %}…{% endif %}</small>
+            </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="empty-state py-4">
+            <i class="bi bi-megaphone fs-1" style="color:#C4B5FD;opacity:1;"></i>
+            <div class="empty-title mt-2">No announcements yet</div>
+          </div>
+        {% endif %}
+      </div>
+      <div class="card-footer text-end">
+        <a href="{{ url_for('notices.index') }}" class="btn btn-sm btn-outline-primary">View all</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent activity -->
+  <div class="col-12">
+    <div class="card cc-card">
+      <div class="cc-card-header">
+        <i class="bi bi-activity" style="color:#7C3AED;"></i> Your Recent Activity
+      </div>
+      <div class="card-body p-0">
+        {% if recent_activity %}
+          <ul class="list-group list-group-flush">
+            {% for log in recent_activity %}
+            <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+              <div class="d-flex align-items-center gap-2">
+                <span class="activity-badge">{{ log.action.replace('_', ' ').title() }}</span>
+                <small class="text-muted">{{ log.details or '—' }}</small>
+              </div>
+              <small class="text-muted text-nowrap">{{ log.created_at.strftime('%d %b %H:%M') }}</small>
+            </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="empty-state py-4">
+            <div class="empty-desc">No activity recorded yet.</div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

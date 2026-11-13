@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Assignments{% endblock %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+  <div>
+    <h1 class="page-title">Assignments</h1>
+    <p class="page-subtitle mb-0">{{ assignments|length }} assignment{{ 's' if assignments|length != 1 else '' }}</p>
+  </div>
+  <a href="{{ url_for('assignments.create') }}" class="btn btn-primary">
+    <i class="bi bi-plus-circle me-2"></i>New Assignment
+  </a>
+</div>
+
+{% if assignments %}
+<div class="row g-3">
+  {% for a in assignments %}
+  <div class="col-lg-6">
+    <div class="item-card">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <div class="item-card-title">{{ a.title }}</div>
+        <span class="item-badge item-badge-purple ms-2">{{ a.subject }}</span>
+      </div>
+      <p style="font-size:.84rem;color:#6B7280;margin-bottom:12px;">{{ a.description[:100] }}{% if a.description|length > 100 %}…{% endif %}</p>
+      <div class="d-flex align-items-center gap-2 mb-14px" style="margin-bottom:14px;">
+        <i class="bi bi-calendar-event" style="color:#D97706;font-size:.85rem;"></i>
+        <small style="color:#374151;"><strong>Deadline:</strong> {{ a.deadline.strftime('%d %b %Y, %H:%M') }}</small>
+        <span class="item-badge {% if a.deadline < now_utc() %}item-badge-red{% else %}item-badge-green{% endif %}">
+          {{ 'Expired' if a.deadline < now_utc() else 'Active' }}
+        </span>
+      </div>
+      <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('assignments.submissions', assignment_id=a.id) }}" class="btn btn-sm btn-soft-purple">
+          <i class="bi bi-inbox me-1"></i>Submissions ({{ a.submissions.count() }})
+        </a>
+        <a href="{{ url_for('assignments.edit', assignment_id=a.id) }}" class="btn btn-sm" style="background:#F3F4F6;color:#374151;border:none;">
+          <i class="bi bi-pencil me-1"></i>Edit
+        </a>
+        {% if a.ref_stored_filename %}
+        <a href="{{ url_for('assignments.download_ref', assignment_id=a.id) }}" class="btn btn-sm" style="background:#EFF6FF;color:#2563EB;border:none;">
+          <i class="bi bi-paperclip me-1"></i>Ref
+        </a>
+        {% endif %}
+        <form action="{{ url_for('assignments.delete', assignment_id=a.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this assignment and all submissions?');">
+          {{ csrf_token_input() }}
+          <button type="submit" class="btn btn-sm btn-soft-red"><i class="bi bi-trash3"></i></button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state page-card">
+  <i class="bi bi-clipboard2-x" style="font-size:3rem;"></i>
+  <div class="empty-title">No assignments yet</div>
+  <div class="empty-desc">Create an assignment for your students.</div>
+  <a href="{{ url_for('assignments.create') }}" class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Create your first assignment</a>
+</div>
+{% endif %}
+{% endblock %}

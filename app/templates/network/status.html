@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Network Status{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Network Status</h1>
+  <p class="page-subtitle">CampusConnect server information</p>
+</div>
+
+<div class="p-3 rounded mb-4 d-flex align-items-start gap-2" style="background:#EFF6FF;border-left:3px solid #3B82F6;font-size:.85rem;color:#1D4ED8;">
+  <i class="bi bi-info-circle-fill flex-shrink-0 mt-1"></i>
+  <div>
+    <strong>Note:</strong> This page shows CampusConnect session activity only.
+    It does <strong>not</strong> scan the network or list all Wi-Fi devices.
+    "Active users" means users whose last activity was within the last 5 minutes.
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <!-- LAN URL card -->
+  <div class="col-md-6">
+    <div class="form-card h-100">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <i class="bi bi-wifi" style="color:#059669;font-size:1.1rem;"></i>
+        <span class="fw-bold" style="color:#1E1B4B;">Server Address</span>
+      </div>
+      <p style="font-size:.8rem;color:#9CA3AF;margin-bottom:6px;">Primary LAN IP</p>
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <code class="fw-bold" id="lanUrl" style="font-size:1rem;color:#4C1D95;background:#F5F3FF;padding:6px 12px;border-radius:8px;">http://{{ lan_ip }}:{{ port }}</code>
+        <button class="btn btn-sm" onclick="copyUrl()" title="Copy URL" style="background:#F5F3FF;color:#7C3AED;border:1.5px solid #DDD6FE;border-radius:8px;">
+          <i class="bi bi-clipboard"></i>
+        </button>
+      </div>
+      <p style="font-size:.8rem;color:#9CA3AF;margin-bottom:6px;">Share this URL with students on the same Wi-Fi:</p>
+      <div class="net-url-box">http://{{ lan_ip }}:{{ port }}</div>
+      {% if all_ips|length > 1 %}
+      <div class="mt-3">
+        <p style="font-size:.8rem;color:#9CA3AF;margin-bottom:6px;">All detected IPv4 addresses:</p>
+        {% for ip in all_ips %}
+        <span class="item-badge item-badge-purple me-1 mb-1 d-inline-block">{{ ip }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Server stats -->
+  <div class="col-md-6">
+    <div class="form-card h-100">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <i class="bi bi-server" style="color:#7C3AED;font-size:1.1rem;"></i>
+        <span class="fw-bold" style="color:#1E1B4B;">Server Stats</span>
+      </div>
+      <table class="table table-sm mb-0" style="font-size:.88rem;">
+        <tbody>
+          <tr><td style="color:#9CA3AF;padding:8px 0;border-color:#F3F4F6;">Uptime</td><td style="padding:8px 0;border-color:#F3F4F6;font-weight:600;color:#1E1B4B;">{{ uptime }}</td></tr>
+          <tr><td style="color:#9CA3AF;padding:8px 0;border-color:#F3F4F6;">Port</td><td style="padding:8px 0;border-color:#F3F4F6;font-weight:600;color:#1E1B4B;">{{ port }} <small style="color:#9CA3AF;">(TCP)</small></td></tr>
+          <tr><td style="color:#9CA3AF;padding:8px 0;border-color:#F3F4F6;">Requests served</td><td style="padding:8px 0;border-color:#F3F4F6;font-weight:600;color:#1E1B4B;">{{ request_count }}</td></tr>
+          <tr><td style="color:#9CA3AF;padding:8px 0;border-color:#F3F4F6;">Active sessions</td>
+            <td style="padding:8px 0;border-color:#F3F4F6;">
+              <span class="item-badge item-badge-green">{{ active_users }}</span>
+              <small style="color:#9CA3AF;margin-left:4px;">last 5 min</small>
+            </td>
+          </tr>
+          <tr><td style="color:#9CA3AF;padding:8px 0;border:none;">Your IP</td><td style="padding:8px 0;border:none;"><code style="background:#F5F3FF;color:#4C1D95;padding:3px 8px;border-radius:6px;font-size:.82rem;">{{ client_ip }}</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- How to connect -->
+<div class="form-card mb-4">
+  <div class="d-flex align-items-center gap-2 mb-3">
+    <i class="bi bi-laptop" style="color:#2563EB;font-size:1.1rem;"></i>
+    <span class="fw-bold" style="color:#1E1B4B;">How to Connect</span>
+  </div>
+  <ol style="font-size:.88rem;color:#374151;line-height:2;margin:0;padding-left:18px;">
+    <li>Make sure your device is on the <strong>same Wi-Fi network</strong> as this server.</li>
+    <li>Open any browser on the other device.</li>
+    <li>Type exactly: <code style="background:#F5F3FF;color:#4C1D95;padding:2px 8px;border-radius:6px;">http://{{ lan_ip }}:{{ port }}</code></li>
+    <li>If it doesn't connect, check: Windows Firewall allows TCP port {{ port }}, and both devices are on the same subnet.</li>
+  </ol>
+</div>
+
+<!-- Activity log (teacher only) -->
+{% if is_teacher %}
+<div class="form-card">
+  <div class="d-flex align-items-center gap-2 mb-3">
+    <i class="bi bi-clock-history" style="color:#D97706;font-size:1.1rem;"></i>
+    <span class="fw-bold" style="color:#1E1B4B;">Recent Activity Log</span>
+  </div>
+  {% if recent_logs %}
+  <div class="table-responsive">
+    <table class="table table-sm table-hover mb-0" style="font-size:.84rem;">
+      <thead style="background:#FAFAFA;">
+        <tr>
+          <th style="color:#9CA3AF;font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;padding:10px 12px;border-bottom:1px solid #F3F4F6;">Time</th>
+          <th style="color:#9CA3AF;font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;padding:10px 12px;border-bottom:1px solid #F3F4F6;">User</th>
+          <th style="color:#9CA3AF;font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;padding:10px 12px;border-bottom:1px solid #F3F4F6;">Action</th>
+          <th class="d-none d-md-table-cell" style="color:#9CA3AF;font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;padding:10px 12px;border-bottom:1px solid #F3F4F6;">Details</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in recent_logs %}
+        <tr>
+          <td style="padding:9px 12px;color:#9CA3AF;">{{ log.created_at.strftime('%d %b %H:%M:%S') }}</td>
+          <td style="padding:9px 12px;color:#374151;font-weight:500;">{{ log.user.full_name }}</td>
+          <td style="padding:9px 12px;"><span class="item-badge item-badge-purple">{{ log.action.replace('_', ' ').title() }}</span></td>
+          <td class="d-none d-md-table-cell" style="padding:9px 12px;color:#9CA3AF;">{{ log.details or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state py-3">
+    <div class="empty-desc">No activity recorded yet.</div>
+  </div>
+  {% endif %}
+</div>
+{% else %}
+<div class="form-card text-center py-3" style="color:#9CA3AF;font-size:.88rem;">
+  <i class="bi bi-lock me-2"></i>Detailed activity log is visible to teachers only.
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function copyUrl() {
+  const url = document.getElementById('lanUrl').textContent.trim();
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = event.target.closest('button');
+    btn.innerHTML = '<i class="bi bi-check2"></i>';
+    setTimeout(() => { btn.innerHTML = '<i class="bi bi-clipboard"></i>'; }, 2000);
+  });
+}
+</script>
+{% endblock %}

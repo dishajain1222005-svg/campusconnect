@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">My Profile</h1>
+  <p class="page-subtitle">Manage your account information</p>
+</div>
+<div class="row g-4">
+  <!-- Profile summary card -->
+  <div class="col-md-4">
+    <div class="profile-side-card">
+      <div class="profile-avatar-lg">{{ current_user.full_name[0].upper() }}</div>
+      <h5 class="fw-bold mb-1" style="color:#1E1B4B;">{{ current_user.full_name }}</h5>
+      <span class="item-badge {% if current_user.is_teacher %}item-badge-purple{% else %}item-badge-green{% endif %} mb-3 d-inline-block">
+        {{ current_user.role.title() }}
+      </span>
+      <div style="font-size:.84rem;color:#6B7280;line-height:2;">
+        <div><i class="bi bi-at me-1" style="color:#A78BFA;"></i>{{ current_user.username }}</div>
+        <div><i class="bi bi-envelope me-1" style="color:#A78BFA;"></i>{{ current_user.email }}</div>
+        {% if current_user.department %}
+        <div><i class="bi bi-building me-1" style="color:#A78BFA;"></i>{{ current_user.department }}</div>
+        {% endif %}
+        {% if current_user.roll_no %}
+        <div><i class="bi bi-person-badge me-1" style="color:#A78BFA;"></i>{{ current_user.roll_no }}</div>
+        {% endif %}
+        <div><i class="bi bi-calendar-check me-1" style="color:#A78BFA;"></i>Joined {{ current_user.created_at.strftime('%B %Y') }}</div>
+      </div>
+      <div class="mt-4">
+        <a href="{{ url_for('profile.change_password') }}" class="btn btn-sm w-100" style="background:#F5F3FF;color:#7C3AED;border:1.5px solid #DDD6FE;border-radius:10px;font-weight:600;">
+          <i class="bi bi-lock me-1"></i>Change Password
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit form -->
+  <div class="col-md-8">
+    <div class="form-card">
+      <div class="d-flex align-items-center gap-2 mb-4">
+        <i class="bi bi-pencil-square" style="color:#7C3AED;font-size:1.1rem;"></i>
+        <span class="fw-bold" style="color:#1E1B4B;font-size:.95rem;">Edit Profile</span>
+      </div>
+      <form method="POST" novalidate>
+        {{ form.hidden_tag() }}
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">{{ form.full_name.label.text }}</label>
+            {{ form.full_name(class="form-control" + (" is-invalid" if form.full_name.errors else "")) }}
+            {% for e in form.full_name.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="col-12">
+            <label class="form-label">{{ form.email.label.text }}</label>
+            {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+            {% for e in form.email.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">{{ form.roll_no.label.text }}</label>
+            {{ form.roll_no(class="form-control") }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">{{ form.department.label.text }}</label>
+            {{ form.department(class="form-control") }}
+          </div>
+          <div class="col-12">
+            <label class="form-label" style="color:#9CA3AF;">Username</label>
+            <input type="text" class="form-control" value="{{ current_user.username }}" disabled style="background:#F9FAFB;color:#9CA3AF;">
+            <div class="form-text">Username cannot be changed.</div>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary mt-4 btn-submit" style="padding:11px 28px;">
+          <span class="btn-text"><i class="bi bi-save me-2"></i>Save Changes</span>
+          <span class="btn-spinner d-none"><span class="spinner-border spinner-border-sm me-2"></span>Saving…</span>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

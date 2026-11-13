@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}CampusConnect{% endblock %} – CampusConnect</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/css/bootstrap.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/css/bootstrap-icons.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+{% if current_user.is_authenticated %}
+<!-- ═══════════ SIDEBAR ═══════════════════════════════════════════════ -->
+<div class="sidebar d-none d-lg-flex flex-column" id="sidebar">
+
+  <!-- Brand -->
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-icon">
+      <i class="bi bi-mortarboard-fill"></i>
+    </div>
+    <span class="sidebar-brand-text">Campus<span class="sidebar-brand-accent">Connect</span></span>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="sidebar-nav flex-grow-1">
+    {% if current_user.is_teacher %}
+      <a href="{{ url_for('teacher.dashboard') }}" class="sidebar-link {% if request.endpoint == 'teacher.dashboard' %}active{% endif %}">
+        <i class="bi bi-grid-fill"></i><span>Dashboard</span>
+      </a>
+    {% else %}
+      <a href="{{ url_for('student.dashboard') }}" class="sidebar-link {% if request.endpoint == 'student.dashboard' %}active{% endif %}">
+        <i class="bi bi-grid-fill"></i><span>Dashboard</span>
+      </a>
+    {% endif %}
+    <a href="{{ url_for('materials.index') }}" class="sidebar-link {% if request.blueprint == 'materials' %}active{% endif %}">
+      <i class="bi bi-journal-bookmark-fill"></i><span>Study Materials</span>
+    </a>
+    <a href="{{ url_for('assignments.index') }}" class="sidebar-link {% if request.blueprint == 'assignments' %}active{% endif %}">
+      <i class="bi bi-clipboard2-check-fill"></i><span>Assignments</span>
+    </a>
+    <a href="{{ url_for('notices.index') }}" class="sidebar-link {% if request.blueprint == 'notices' %}active{% endif %}">
+      <i class="bi bi-megaphone-fill"></i><span>Notice Board</span>
+    </a>
+    <a href="{{ url_for('quizzes.index') }}" class="sidebar-link {% if request.blueprint == 'quizzes' %}active{% endif %}">
+      <i class="bi bi-bar-chart-fill"></i><span>Quizzes</span>
+    </a>
+    <a href="{{ url_for('profile.view') }}" class="sidebar-link {% if request.blueprint == 'profile' %}active{% endif %}">
+      <i class="bi bi-person-circle"></i><span>Profile</span>
+    </a>
+    <a href="{{ url_for('network.status') }}" class="sidebar-link {% if request.blueprint == 'network' %}active{% endif %}">
+      <i class="bi bi-wifi"></i><span>Network Status</span>
+    </a>
+  </nav>
+
+  <!-- Campus illustration (decorative SVG, no functionality) -->
+  <div class="sidebar-illustration" aria-hidden="true">
+    <svg viewBox="0 0 190 130" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax meet">
+      <!-- Sky -->
+      <defs>
+        <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2D1B69" stop-opacity="0"/>
+          <stop offset="100%" stop-color="#1a0a3c" stop-opacity="0.9"/>
+        </linearGradient>
+      </defs>
+      <!-- Ground -->
+      <rect x="0" y="90" width="190" height="40" rx="0" fill="rgba(0,0,0,0.25)"/>
+      <!-- Trees left -->
+      <ellipse cx="18" cy="72" rx="12" ry="18" fill="rgba(34,197,94,0.35)"/>
+      <rect x="16" y="82" width="4" height="12" fill="rgba(0,0,0,0.3)"/>
+      <ellipse cx="32" cy="68" rx="10" ry="15" fill="rgba(34,197,94,0.3)"/>
+      <rect x="30" y="78" width="3" height="12" fill="rgba(0,0,0,0.3)"/>
+      <!-- Main building -->
+      <rect x="55" y="38" width="80" height="56" rx="2" fill="rgba(167,139,250,0.25)"/>
+      <!-- Building windows row 1 -->
+      <rect x="62" y="46" width="10" height="8" rx="1" fill="rgba(255,220,100,0.6)"/>
+      <rect x="77" y="46" width="10" height="8" rx="1" fill="rgba(255,220,100,0.6)"/>
+      <rect x="92" y="46" width="10" height="8" rx="1" fill="rgba(255,220,100,0.6)"/>
+      <rect x="107" y="46" width="10" height="8" rx="1" fill="rgba(255,220,100,0.6)"/>
+      <rect x="122" y="46" width="10" height="8" rx="1" fill="rgba(255,220,100,0.5)"/>
+      <!-- Building windows row 2 -->
+      <rect x="62" y="62" width="10" height="8" rx="1" fill="rgba(255,220,100,0.5)"/>
+      <rect x="77" y="62" width="10" height="8" rx="1" fill="rgba(255,220,100,0.7)"/>
+      <rect x="92" y="62" width="10" height="8" rx="1" fill="rgba(255,220,100,0.4)"/>
+      <rect x="107" y="62" width="10" height="8" rx="1" fill="rgba(255,220,100,0.6)"/>
+      <rect x="122" y="62" width="10" height="8" rx="1" fill="rgba(255,220,100,0.5)"/>
+      <!-- Main door -->
+      <rect x="88" y="78" width="14" height="16" rx="1" fill="rgba(255,220,100,0.4)"/>
+      <!-- Side building left -->
+      <rect x="30" y="52" width="30" height="42" rx="2" fill="rgba(139,92,246,0.2)"/>
+      <rect x="35" y="58" width="8" height="6" rx="1" fill="rgba(255,220,100,0.4)"/>
+      <rect x="47" y="58" width="8" height="6" rx="1" fill="rgba(255,220,100,0.4)"/>
+      <rect x="35" y="70" width="8" height="6" rx="1" fill="rgba(255,220,100,0.3)"/>
+      <rect x="47" y="70" width="8" height="6" rx="1" fill="rgba(255,220,100,0.5)"/>
+      <!-- Side building right -->
+      <rect x="130" y="55" width="30" height="39" rx="2" fill="rgba(139,92,246,0.2)"/>
+      <rect x="135" y="61" width="8" height="6" rx="1" fill="rgba(255,220,100,0.4)"/>
+      <rect x="147" y="61" width="8" height="6" rx="1" fill="rgba(255,220,100,0.5)"/>
+      <rect x="135" y="73" width="8" height="6" rx="1" fill="rgba(255,220,100,0.3)"/>
+      <rect x="147" y="73" width="8" height="6" rx="1" fill="rgba(255,220,100,0.4)"/>
+      <!-- Trees right -->
+      <ellipse cx="168" cy="68" rx="13" ry="19" fill="rgba(34,197,94,0.35)"/>
+      <rect x="166" y="80" width="4" height="12" fill="rgba(0,0,0,0.3)"/>
+      <!-- Glow/stars -->
+      <circle cx="40" cy="20" r="1.5" fill="rgba(255,255,255,0.4)"/>
+      <circle cx="80" cy="10" r="1" fill="rgba(255,255,255,0.3)"/>
+      <circle cx="150" cy="15" r="1.5" fill="rgba(255,255,255,0.35)"/>
+      <circle cx="170" cy="28" r="1" fill="rgba(255,255,255,0.25)"/>
+      <!-- Overlay gradient for fade -->
+      <rect x="0" y="0" width="190" height="130" fill="url(#skyGrad)"/>
+    </svg>
+  </div>
+
+  <!-- Footer: user + logout -->
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-avatar">{{ current_user.full_name[0].upper() }}</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name">{{ current_user.full_name }}</div>
+        <div class="sidebar-user-role">{{ current_user.role.title() }}</div>
+      </div>
+    </div>
+    <a href="{{ url_for('auth.logout') }}" class="sidebar-link sidebar-logout">
+      <i class="bi bi-box-arrow-right"></i><span>Logout</span>
+    </a>
+  </div>
+</div>
+
+<!-- ═══════════ MOBILE OFFCANVAS ════════════════════════════════════════ -->
+<div class="offcanvas offcanvas-start" tabindex="-1" id="mobileNav">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title fw-bold text-white">CampusConnect</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body p-0">
+    <nav class="sidebar-nav">
+      {% if current_user.is_teacher %}
+        <a href="{{ url_for('teacher.dashboard') }}" class="sidebar-link {% if request.endpoint == 'teacher.dashboard' %}active{% endif %}">
+          <i class="bi bi-grid-fill"></i><span>Dashboard</span>
+        </a>
+      {% else %}
+        <a href="{{ url_for('student.dashboard') }}" class="sidebar-link {% if request.endpoint == 'student.dashboard' %}active{% endif %}">
+          <i class="bi bi-grid-fill"></i><span>Dashboard</span>
+        </a>
+      {% endif %}
+      <a href="{{ url_for('materials.index') }}" class="sidebar-link"><i class="bi bi-journal-bookmark-fill"></i><span>Study Materials</span></a>
+      <a href="{{ url_for('assignments.index') }}" class="sidebar-link"><i class="bi bi-clipboard2-check-fill"></i><span>Assignments</span></a>
+      <a href="{{ url_for('notices.index') }}" class="sidebar-link"><i class="bi bi-megaphone-fill"></i><span>Notice Board</span></a>
+      <a href="{{ url_for('quizzes.index') }}" class="sidebar-link"><i class="bi bi-bar-chart-fill"></i><span>Quizzes</span></a>
+      <a href="{{ url_for('profile.view') }}" class="sidebar-link"><i class="bi bi-person-circle"></i><span>Profile</span></a>
+      <a href="{{ url_for('network.status') }}" class="sidebar-link"><i class="bi bi-wifi"></i><span>Network Status</span></a>
+      <a href="{{ url_for('auth.logout') }}" class="sidebar-link sidebar-logout"><i class="bi bi-box-arrow-right"></i><span>Logout</span></a>
+    </nav>
+  </div>
+</div>
+
+<!-- ═══════════ MAIN CONTENT ════════════════════════════════════════════ -->
+<div class="main-wrap">
+  <!-- Mobile top nav -->
+  <nav class="top-nav d-flex d-lg-none align-items-center px-3 py-2">
+    <button class="btn btn-link text-white p-0 me-3" data-bs-toggle="offcanvas" data-bs-target="#mobileNav">
+      <i class="bi bi-list fs-4"></i>
+    </button>
+    <span class="fw-bold text-white fs-6">
+      <i class="bi bi-mortarboard-fill me-1"></i>CampusConnect
+    </span>
+  </nav>
+
+  <div class="content-area">
+    {% include "partials/flashes.html" %}
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+{% else %}
+<div class="auth-layout">
+  {% include "partials/flashes.html" %}
+  {% block auth_content %}{% endblock %}
+</div>
+{% endif %}
+
+<script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

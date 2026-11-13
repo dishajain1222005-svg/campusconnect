@@ -1,0 +1,639 @@
+{% extends "base.html" %}
+{% block title %}Teacher Dashboard{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ── Dashboard-specific overrides ──────────────────────────────────── */
+
+/* Top header bar matching reference */
+.dash-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.dash-header-left h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1E1B4B;
+  margin: 0 0 2px;
+  letter-spacing: -.4px;
+}
+.dash-header-left p {
+  margin: 0;
+  color: #6B7280;
+  font-size: .9rem;
+}
+.dash-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.dash-search {
+  position: relative;
+}
+.dash-search input {
+  width: 240px;
+  padding: 8px 14px 8px 36px;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 10px;
+  font-size: .85rem;
+  background: #fff;
+  color: #374151;
+  outline: none;
+  transition: border-color .15s;
+}
+.dash-search input:focus { border-color: #7C3AED; }
+.dash-search i {
+  position: absolute;
+  left: 11px; top: 50%;
+  transform: translateY(-50%);
+  color: #9CA3AF;
+  font-size: .9rem;
+  pointer-events: none;
+}
+.dash-bell {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  border: 1.5px solid #E5E7EB;
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  color: #6B7280;
+  font-size: 1rem;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+}
+.dash-bell-dot {
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #EF4444;
+  border: 1.5px solid #fff;
+}
+.dash-avatar {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7C3AED, #4F46E5);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+  font-size: .9rem;
+  flex-shrink: 0;
+  cursor: default;
+}
+
+/* Hero banner matching reference */
+.hero-banner {
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  position: relative;
+  height: 120px;
+  background: linear-gradient(110deg, #1A0F3C 0%, #2D1B69 35%, #3730A3 65%, #4c46b8 100%);
+  display: flex;
+  align-items: center;
+}
+.hero-banner-text {
+  padding: 0 32px;
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+}
+.hero-banner-text h2 {
+  font-size: 1.9rem;
+  font-weight: 900;
+  color: #fff;
+  margin: 0 0 4px;
+  letter-spacing: -.3px;
+}
+.hero-banner-text h2 span { color: #A78BFA; }
+.hero-banner-text p {
+  color: rgba(255,255,255,.75);
+  margin: 0;
+  font-size: .88rem;
+}
+.hero-banner-illustration {
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  width: 55%;
+  overflow: hidden;
+  z-index: 1;
+}
+/* Fade the illustration into the banner */
+.hero-banner-illustration::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 80px;
+  background: linear-gradient(to right, #2D1B69, transparent);
+  z-index: 3;
+}
+.hero-banner-illustration svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Stat cards — horizontal layout (icon left, number right) matching reference */
+.stat-card-h {
+  background: #fff;
+  border: 1px solid #F0EEF8;
+  border-radius: 14px;
+  padding: 18px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.05);
+  transition: transform .18s, box-shadow .18s;
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+}
+.stat-card-h:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,0,0,.09);
+}
+/* Soft curved shape in background */
+.stat-card-h::after {
+  content: '';
+  position: absolute;
+  right: -18px; bottom: -18px;
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  opacity: .18;
+}
+.stat-card-icon-h {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+.stat-card-body-h { position: relative; z-index: 1; }
+.stat-card-num {
+  font-size: 1.9rem;
+  font-weight: 900;
+  color: #1E1B4B;
+  line-height: 1;
+  letter-spacing: -.5px;
+}
+.stat-card-lbl {
+  font-size: .75rem;
+  color: #6B7280;
+  font-weight: 500;
+  margin-top: 3px;
+}
+
+/* Quick actions row */
+.qa-container {
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+.qa-title {
+  font-size: .88rem;
+  font-weight: 700;
+  color: #1E1B4B;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.qa-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1.5px solid;
+  background: #fff;
+  font-size: .84rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform .15s, box-shadow .15s, background .15s;
+  white-space: nowrap;
+}
+.qa-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,.1);
+  text-decoration: none;
+}
+.qa-btn i { font-size: 1rem; }
+
+/* Bottom two-column section */
+.submissions-card, .activity-card {
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+  height: 100%;
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid #F3F4F6;
+}
+.section-title {
+  font-size: .9rem;
+  font-weight: 700;
+  color: #1E1B4B;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.section-title i { font-size: 1rem; color: #7C3AED; }
+.view-all-link {
+  font-size: .8rem;
+  font-weight: 600;
+  color: #7C3AED;
+  text-decoration: none;
+}
+.view-all-link:hover { text-decoration: underline; }
+
+/* Submissions empty state matching reference */
+.submissions-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  text-align: center;
+}
+.submissions-empty-title {
+  font-size: .95rem;
+  font-weight: 700;
+  color: #1E1B4B;
+  margin: 12px 0 4px;
+}
+.submissions-empty-desc {
+  font-size: .82rem;
+  color: #9CA3AF;
+}
+
+/* Activity list */
+.activity-list { list-style: none; padding: 0; margin: 0; }
+.activity-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  border-bottom: 1px solid #F9FAFB;
+  gap: 12px;
+}
+.activity-item:last-child { border-bottom: none; }
+.activity-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.act-badge {
+  font-size: .72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.act-badge-login    { background: #EDE9FE; color: #6D28D9; }
+.act-badge-logout   { background: #EDE9FE; color: #6D28D9; }
+.act-badge-quiz     { background: #D1FAE5; color: #047857; }
+.act-badge-start    { background: #DBEAFE; color: #1D4ED8; }
+.act-badge-default  { background: #F3F4F6; color: #6B7280; }
+.act-name {
+  font-size: .84rem;
+  color: #374151;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.act-time {
+  font-size: .78rem;
+  color: #9CA3AF;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+@media (max-width: 991px) {
+  .dash-header { flex-direction: column; align-items: flex-start; }
+  .dash-search input { width: 180px; }
+}
+@media (max-width: 575px) {
+  .hero-banner { height: auto; min-height: 90px; }
+  .hero-banner-text { padding: 16px; }
+  .hero-banner-text h2 { font-size: 1.3rem; }
+  .hero-banner-illustration { display: none; }
+  .dash-search input { width: 140px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── Header: title + search + bell + avatar ──────────────────────── -->
+<div class="dash-header">
+  <div class="dash-header-left">
+    <h1>Teacher Dashboard</h1>
+    <p>Welcome back, {{ current_user.full_name }}!</p>
+  </div>
+  <div class="dash-header-right">
+    <div class="dash-search">
+      <i class="bi bi-search"></i>
+      <input type="text" placeholder="Search students, materials, assignments…" disabled>
+    </div>
+    <div class="dash-bell">
+      <i class="bi bi-bell-fill"></i>
+      <span class="dash-bell-dot"></span>
+    </div>
+    <div class="dash-avatar">{{ current_user.full_name[0].upper() }}</div>
+  </div>
+</div>
+
+<!-- ── Hero banner with campus illustration ───────────────────────── -->
+<div class="hero-banner">
+  <div class="hero-banner-text">
+    <h2>Campus<span>Connect</span></h2>
+    <p>Your Offline Campus Collaboration Platform</p>
+  </div>
+  <div class="hero-banner-illustration" aria-hidden="true">
+    <!-- Inline campus scene SVG (purely decorative) -->
+    <svg viewBox="0 0 500 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMaxYMax meet">
+      <!-- Sky gradient -->
+      <defs>
+        <linearGradient id="hSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#C084FC" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="#7C3AED" stop-opacity="0.5"/>
+        </linearGradient>
+        <linearGradient id="hGround" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#4ADE80" stop-opacity="0.4"/>
+          <stop offset="100%" stop-color="#16A34A" stop-opacity="0.6"/>
+        </linearGradient>
+      </defs>
+      <rect width="500" height="120" fill="url(#hSky)"/>
+      <!-- Ground -->
+      <rect x="0" y="96" width="500" height="24" fill="url(#hGround)"/>
+      <!-- Main large building (center-right) -->
+      <rect x="200" y="22" width="140" height="78" rx="3" fill="rgba(216,180,254,0.5)"/>
+      <rect x="200" y="22" width="140" height="6" rx="2" fill="rgba(167,139,250,0.7)"/>
+      <!-- Building windows grid -->
+      {% for row in range(3) %}
+        {% for col in range(5) %}
+      <rect x="{{ 213 + col*22 }}" y="{{ 36 + row*18 }}" width="12" height="10" rx="1" fill="rgba(254,240,138,{{ 0.5 + (loop.index % 3)*0.15 }})"/>
+        {% endfor %}
+      {% endfor %}
+      <!-- Main door -->
+      <rect x="258" y="80" width="22" height="20" rx="2" fill="rgba(254,240,138,0.6)"/>
+      <!-- Left wing -->
+      <rect x="130" y="38" width="76" height="62" rx="3" fill="rgba(196,181,253,0.4)"/>
+      {% for row in range(2) %}
+        {% for col in range(3) %}
+      <rect x="{{ 142 + col*20 }}" y="{{ 50 + row*18 }}" width="10" height="9" rx="1" fill="rgba(254,240,138,0.5)"/>
+        {% endfor %}
+      {% endfor %}
+      <!-- Right tower -->
+      <rect x="334" y="12" width="50" height="88" rx="3" fill="rgba(167,139,250,0.4)"/>
+      {% for row in range(4) %}
+      <rect x="343" y="{{ 24 + row*18 }}" width="8" height="10" rx="1" fill="rgba(254,240,138,0.5)"/>
+      <rect x="357" y="{{ 24 + row*18 }}" width="8" height="10" rx="1" fill="rgba(254,240,138,0.6)"/>
+      <rect x="368" y="{{ 24 + row*18 }}" width="8" height="10" rx="1" fill="rgba(254,240,138,0.4)"/>
+      {% endfor %}
+      <!-- Trees left -->
+      <ellipse cx="80" cy="70" rx="22" ry="30" fill="rgba(74,222,128,0.5)"/>
+      <ellipse cx="100" cy="65" rx="18" ry="26" fill="rgba(34,197,94,0.55)"/>
+      <rect x="90" y="88" width="5" height="12" fill="rgba(0,0,0,0.3)"/>
+      <ellipse cx="55" cy="78" rx="15" ry="22" fill="rgba(74,222,128,0.4)"/>
+      <!-- Trees right -->
+      <ellipse cx="430" cy="62" rx="22" ry="32" fill="rgba(74,222,128,0.55)"/>
+      <ellipse cx="460" cy="68" rx="18" ry="26" fill="rgba(34,197,94,0.5)"/>
+      <rect x="455" y="88" width="5" height="10" fill="rgba(0,0,0,0.3)"/>
+      <!-- Stars/dots -->
+      <circle cx="160" cy="10" r="2" fill="rgba(255,255,255,0.5)"/>
+      <circle cx="300" cy="6" r="1.5" fill="rgba(255,255,255,0.4)"/>
+      <circle cx="410" cy="12" r="2" fill="rgba(255,255,255,0.5)"/>
+      <circle cx="480" cy="20" r="1.5" fill="rgba(255,255,255,0.3)"/>
+    </svg>
+  </div>
+</div>
+
+<!-- ── Stat cards (real data) ─────────────────────────────────────── -->
+<div class="row g-3 mb-3">
+  <div class="col-6 col-md col-lg">
+    <div class="stat-card-h" style="background:linear-gradient(135deg,#F5F3FF,#EDE9FE);">
+      <div class="stat-card-icon-h" style="background:rgba(124,58,237,.12); color:#7C3AED;">
+        <i class="bi bi-people-fill"></i>
+      </div>
+      <div class="stat-card-body-h">
+        <div class="stat-card-num">{{ total_students }}</div>
+        <div class="stat-card-lbl">Students</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md col-lg">
+    <a href="{{ url_for('materials.index') }}" style="text-decoration:none;display:block;">
+      <div class="stat-card-h" style="background:linear-gradient(135deg,#EFF6FF,#DBEAFE);">
+        <div class="stat-card-icon-h" style="background:rgba(99,102,241,.12); color:#6366F1;">
+          <i class="bi bi-folder-fill"></i>
+        </div>
+        <div class="stat-card-body-h">
+          <div class="stat-card-num">{{ my_materials }}</div>
+          <div class="stat-card-lbl">Materials</div>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-6 col-md col-lg">
+    <a href="{{ url_for('assignments.index') }}" style="text-decoration:none;display:block;">
+      <div class="stat-card-h" style="background:linear-gradient(135deg,#FFFBEB,#FEF3C7);">
+        <div class="stat-card-icon-h" style="background:rgba(245,158,11,.12); color:#D97706;">
+          <i class="bi bi-clipboard2-check-fill"></i>
+        </div>
+        <div class="stat-card-body-h">
+          <div class="stat-card-num">{{ my_assignments }}</div>
+          <div class="stat-card-lbl">Assignments</div>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-6 col-md col-lg">
+    <a href="{{ url_for('notices.index') }}" style="text-decoration:none;display:block;">
+      <div class="stat-card-h" style="background:linear-gradient(135deg,#FFF1F2,#FFE4E6);">
+        <div class="stat-card-icon-h" style="background:rgba(239,68,68,.12); color:#DC2626;">
+          <i class="bi bi-megaphone-fill"></i>
+        </div>
+        <div class="stat-card-body-h">
+          <div class="stat-card-num">{{ my_notices }}</div>
+          <div class="stat-card-lbl">Notices</div>
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="col-6 col-md col-lg">
+    <a href="{{ url_for('quizzes.index') }}" style="text-decoration:none;display:block;">
+      <div class="stat-card-h" style="background:linear-gradient(135deg,#F0FDF4,#DCFCE7);">
+        <div class="stat-card-icon-h" style="background:rgba(16,185,129,.12); color:#059669;">
+          <i class="bi bi-patch-question-fill"></i>
+        </div>
+        <div class="stat-card-body-h">
+          <div class="stat-card-num">{{ my_quizzes }}</div>
+          <div class="stat-card-lbl">Quizzes</div>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<!-- ── Quick Actions ──────────────────────────────────────────────── -->
+<div class="qa-container">
+  <div class="qa-title">
+    <i class="bi bi-lightning-fill" style="color:#F59E0B;"></i> Quick Actions
+  </div>
+  <div class="row g-2">
+    <div class="col-6 col-md-3">
+      <a href="{{ url_for('materials.upload') }}" class="qa-btn" style="color:#6366F1; border-color:#C7D2FE; background:#EEF2FF;">
+        <i class="bi bi-upload"></i> Upload Material
+      </a>
+    </div>
+    <div class="col-6 col-md-3">
+      <a href="{{ url_for('assignments.create') }}" class="qa-btn" style="color:#D97706; border-color:#FDE68A; background:#FFFBEB;">
+        <i class="bi bi-plus-circle"></i> New Assignment
+      </a>
+    </div>
+    <div class="col-6 col-md-3">
+      <a href="{{ url_for('notices.create') }}" class="qa-btn" style="color:#DC2626; border-color:#FECACA; background:#FFF1F2;">
+        <i class="bi bi-megaphone"></i> Post Notice
+      </a>
+    </div>
+    <div class="col-6 col-md-3">
+      <a href="{{ url_for('quizzes.create') }}" class="qa-btn" style="color:#059669; border-color:#A7F3D0; background:#F0FDF4;">
+        <i class="bi bi-patch-plus"></i> Create Quiz
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ── Recent Submissions + Recent Activity ───────────────────────── -->
+<div class="row g-3">
+  <!-- Recent Submissions -->
+  <div class="col-lg-7">
+    <div class="submissions-card">
+      <div class="section-header">
+        <div class="section-title">
+          <i class="bi bi-file-earmark-text-fill"></i> Recent Submissions
+        </div>
+        <a href="{{ url_for('assignments.index') }}" class="view-all-link">View All →</a>
+      </div>
+      {% if recent_submissions %}
+        <div class="table-responsive">
+          <table class="table table-hover mb-0" style="font-size:.85rem;">
+            <thead style="background:#FAFAFA;">
+              <tr>
+                <th style="padding:10px 20px;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:#9CA3AF;font-weight:700;border-bottom:1px solid #F3F4F6;">Student</th>
+                <th style="padding:10px 14px;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:#9CA3AF;font-weight:700;border-bottom:1px solid #F3F4F6;">Assignment</th>
+                <th style="padding:10px 14px;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:#9CA3AF;font-weight:700;border-bottom:1px solid #F3F4F6;">Submitted</th>
+                <th style="padding:10px 14px;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:#9CA3AF;font-weight:700;border-bottom:1px solid #F3F4F6;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sub in recent_submissions %}
+              <tr>
+                <td style="padding:10px 20px; color:#1E1B4B; font-weight:600;">{{ sub.student.full_name }}</td>
+                <td style="padding:10px 14px; color:#6B7280;">{{ sub.assignment.title[:26] }}{% if sub.assignment.title|length > 26 %}…{% endif %}</td>
+                <td style="padding:10px 14px;"><small style="color:#9CA3AF;">{{ sub.submitted_at.strftime('%d %b %H:%M') }}</small></td>
+                <td style="padding:10px 14px;">
+                  {% if sub.is_late %}
+                    <span style="font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:20px;background:#FEE2E2;color:#DC2626;">Late</span>
+                  {% else %}
+                    <span style="font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:20px;background:#D1FAE5;color:#059669;">On Time</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="submissions-empty">
+          <!-- Document illustration matching reference -->
+          <svg width="90" height="90" viewBox="0 0 90 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="45" cy="45" r="40" fill="#F5F3FF"/>
+            <!-- Back document -->
+            <rect x="28" y="20" width="34" height="44" rx="4" fill="#C4B5FD" fill-opacity="0.6"/>
+            <!-- Front document -->
+            <rect x="34" y="25" width="34" height="44" rx="4" fill="#EDE9FE"/>
+            <rect x="34" y="25" width="34" height="44" rx="4" stroke="#A78BFA" stroke-width="1.5"/>
+            <!-- Lines on document -->
+            <rect x="40" y="36" width="22" height="2.5" rx="1.5" fill="#A78BFA" fill-opacity="0.6"/>
+            <rect x="40" y="43" width="18" height="2.5" rx="1.5" fill="#A78BFA" fill-opacity="0.5"/>
+            <rect x="40" y="50" width="20" height="2.5" rx="1.5" fill="#A78BFA" fill-opacity="0.4"/>
+            <rect x="40" y="57" width="14" height="2.5" rx="1.5" fill="#A78BFA" fill-opacity="0.3"/>
+            <!-- Check circle -->
+            <circle cx="62" cy="62" r="12" fill="#7C3AED"/>
+            <path d="M57 62l3.5 3.5L67 57" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Sparkle top-right -->
+            <path d="M72 22 L73.5 25 L77 22 L73.5 19Z" fill="#A78BFA" fill-opacity="0.7"/>
+            <path d="M20 35 L21 37.5 L23.5 35 L21 32.5Z" fill="#C4B5FD" fill-opacity="0.6"/>
+          </svg>
+          <div class="submissions-empty-title">No submissions yet</div>
+          <div class="submissions-empty-desc">Submissions from students will appear here.</div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="col-lg-5">
+    <div class="activity-card">
+      <div class="section-header">
+        <div class="section-title">
+          <i class="bi bi-activity"></i> Recent Activity
+        </div>
+      </div>
+      {% if recent_activity %}
+        <ul class="activity-list">
+          {% for log in recent_activity %}
+          <li class="activity-item">
+            <div class="activity-left">
+              {% set a = log.action.lower() %}
+              {% if 'login' == a %}
+                <span class="act-badge act-badge-login">Login</span>
+              {% elif 'logout' == a %}
+                <span class="act-badge act-badge-logout">Logout</span>
+              {% elif 'submit_quiz' in a or 'quiz' in a and 'submit' in a %}
+                <span class="act-badge act-badge-quiz">Submit Quiz</span>
+              {% elif 'start_quiz' in a or 'start' in a and 'quiz' in a %}
+                <span class="act-badge act-badge-start">Start Quiz</span>
+              {% elif 'register' in a %}
+                <span class="act-badge" style="background:#FEF3C7;color:#D97706;">Register</span>
+              {% elif 'upload' in a %}
+                <span class="act-badge" style="background:#EDE9FE;color:#6D28D9;">Upload</span>
+              {% elif 'submit' in a %}
+                <span class="act-badge act-badge-quiz">Submit</span>
+              {% else %}
+                <span class="act-badge act-badge-default">{{ log.action.replace('_',' ').title() }}</span>
+              {% endif %}
+              <span class="act-name">{{ log.user.full_name }}</span>
+            </div>
+            <span class="act-time">{{ log.created_at.strftime('%H:%M') }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div style="padding:32px;text-align:center;color:#9CA3AF;font-size:.85rem;">
+          No activity yet.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

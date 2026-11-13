@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{{ url_for('quizzes.index') }}">Quizzes</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('quizzes.manage', quiz_id=quiz.id) }}">{{ quiz.title }}</a></li>
+      <li class="breadcrumb-item active">{{ title }}</li>
+    </ol>
+  </nav>
+  <h1 class="page-title">{{ title }}</h1>
+</div>
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="form-card">
+      <form method="POST" novalidate>
+        {{ form.hidden_tag() }}
+        <div class="mb-4">
+          <label class="form-label fw-semibold">{{ form.question_text.label.text }}</label>
+          {{ form.question_text(class="form-control" + (" is-invalid" if form.question_text.errors else ""), rows=3, placeholder="Enter your question here…") }}
+          {% for e in form.question_text.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="row g-3 mb-4">
+          {% for field, label in [(form.option_a, 'A'), (form.option_b, 'B'), (form.option_c, 'C'), (form.option_d, 'D')] %}
+          <div class="col-md-6">
+            <label class="form-label">
+              <span class="item-badge item-badge-gray me-1">{{ label }}</span> {{ field.label.text }}
+            </label>
+            {{ field(class="form-control" + (" is-invalid" if field.errors else ""), placeholder="Option {{ label }}") }}
+            {% for e in field.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+          </div>
+          {% endfor %}
+        </div>
+        <div class="mb-4">
+          <label class="form-label fw-semibold">{{ form.correct_option.label.text }}</label>
+          <div class="d-flex gap-3 flex-wrap">
+            {% for subfield in form.correct_option %}
+            <div class="form-check">
+              {{ subfield(class="form-check-input") }}
+              <label class="form-check-label badge {% if subfield.checked %}bg-success{% else %}bg-light text-dark border{% endif %} px-3 py-2">
+                {{ subfield.label.text }}
+              </label>
+            </div>
+            {% endfor %}
+          </div>
+          {% for e in form.correct_option.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="mb-4" style="max-width:200px;">
+          <label class="form-label">{{ form.marks.label.text }}</label>
+          {{ form.marks(class="form-control" + (" is-invalid" if form.marks.errors else "")) }}
+          {% for e in form.marks.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary btn-submit">
+            <span class="btn-text"><i class="bi bi-save me-2"></i>{{ form.submit.label.text }}</span>
+            <span class="btn-spinner d-none"><span class="spinner-border spinner-border-sm me-2"></span>Saving…</span>
+          </button>
+          <a href="{{ url_for('quizzes.manage', quiz_id=quiz.id) }}" class="btn" style="background:#F3F4F6;color:#374151;">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
